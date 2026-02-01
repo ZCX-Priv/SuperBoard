@@ -286,8 +286,12 @@
         <div class="toolbar-group">
             <div class="icon-btn" title="工具">
                 <svg viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <path d="M9 9l6 6M15 9l-6 6"></path> <!-- X inside box as drawn -->
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" transform="rotate(-90 12 12)"></path>
+                    <g transform="rotate(180 12 12)">
+                        <path d="M14 10L12 8L17 3L21 7L16 12L14 10"></path>
+                        <path d="M14 10L8.5 15.5"></path>
+                        <path d="M8.5 15.5L3 21"></path>
+                    </g>
                 </svg>
             </div>
 
@@ -311,6 +315,13 @@
 
     </div>
 
+    <!-- 引入功能模块 -->
+    <script src="./js/canvas.js"></script>
+    <script src="./js/pen.js"></script>
+    <script src="./js/eraser.js"></script>
+    <script src="./js/toolbar.js"></script>
+    <script src="./js/change.js"></script>
+
     <script>
         function updateTime() {
             const now = new Date();
@@ -319,7 +330,7 @@
             const date = now.getDate();
             const hours = now.getHours();
             const minutes = now.getMinutes();
-            
+
             const period = hours < 12 ? '上午' : '下午';
             const displayHour = hours > 12 ? hours - 12 : hours;
             const displayMinute = minutes < 10 ? '0' + minutes : minutes;
