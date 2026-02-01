@@ -311,7 +311,6 @@ class PenTool {
     setType(type) {
         if (this.penTypes[type]) {
             this.type = type;
-            this.size = this.penTypes[type].size;
         }
     }
 
