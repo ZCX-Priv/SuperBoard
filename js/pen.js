@@ -392,20 +392,17 @@ class PenTool {
         ctx.beginPath();
         ctx.moveTo(x, y);
 
-        // 设置笔型样式
         const penConfig = this.penTypes[this.type];
         ctx.lineWidth = this.size;
         ctx.strokeStyle = this.color;
         ctx.globalAlpha = penConfig.opacity;
 
-        // 荧光笔特殊处理（混合模式）
         if (this.type === 'highlighter') {
             ctx.globalCompositeOperation = 'multiply';
         } else {
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        // 粉笔效果
         if (this.type === 'chalk') {
             ctx.shadowBlur = 2;
             ctx.shadowColor = this.color;
@@ -417,18 +414,26 @@ class PenTool {
     draw(x, y, ctx) {
         if (!this.lastPoint) return;
 
-        // 使用二次贝塞尔曲线使线条更平滑
-        const midPoint = {
-            x: (this.lastPoint.x + x) / 2,
-            y: (this.lastPoint.y + y) / 2
-        };
+        const dx = x - this.lastPoint.x;
+        const dy = y - this.lastPoint.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
-        ctx.quadraticCurveTo(this.lastPoint.x, this.lastPoint.y, midPoint.x, midPoint.y);
+        // 如果距离太大，使用线性插值填充中间点
+        if (distance > this.size) {
+            const steps = Math.ceil(distance / (this.size * 0.5));
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps;
+                const interpX = this.lastPoint.x + dx * t;
+                const interpY = this.lastPoint.y + dy * t;
+                ctx.lineTo(interpX, interpY);
+            }
+        } else {
+            ctx.lineTo(x, y);
+        }
+
         ctx.stroke();
-
-        // 继续路径
         ctx.beginPath();
-        ctx.moveTo(midPoint.x, midPoint.y);
+        ctx.moveTo(x, y);
 
         this.lastPoint = { x, y };
     }

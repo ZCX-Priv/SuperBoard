@@ -45,37 +45,35 @@ class CanvasManager {
         this.canvas.width = this.config.width;
         this.canvas.height = this.config.height;
         this.canvas.style.cssText = `
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            z-index: 1;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
             cursor: crosshair;
+            touch-action: none;
         `;
 
         this.ctx = this.canvas.getContext('2d');
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
 
-        // 插入到 body 中，在 content-area 之前
-        const contentArea = document.querySelector('.content-area');
-        if (contentArea) {
-            document.body.insertBefore(this.canvas, contentArea);
-        } else {
-            document.body.appendChild(this.canvas);
-        }
+        // 插入到 body 开头，确保在最底层
+        document.body.insertBefore(this.canvas, document.body.firstChild);
 
         // 清空占位符内容
+        const contentArea = document.querySelector('.content-area');
         if (contentArea) {
             contentArea.style.display = 'none';
         }
     }
 
     setupEventListeners() {
-        // 鼠标事件
-        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-        this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-        this.canvas.addEventListener('mouseout', this.handleMouseUp.bind(this));
+        // 在 window 级别捕获事件，确保工具栏区域也能绘画
+        window.addEventListener('mousedown', this.handleMouseDown.bind(this));
+        window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
         // 触摸事件
         this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
@@ -90,17 +88,34 @@ class CanvasManager {
     }
 
     getPoint(e) {
-        const rect = this.canvas.getBoundingClientRect();
         const clientX = e.clientX || (e.touches && e.touches[0].clientX);
         const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        // 如果事件在canvas上，直接计算
+        if (this.canvas && this.canvas.contains(e.target)) {
+            const rect = this.canvas.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left - this.offsetX) / this.scale,
+                y: (clientY - rect.top - this.offsetY) / this.scale
+            };
+        }
+
+        // 如果事件不在canvas上（可能在工具栏下方），使用window坐标
         return {
-            x: (clientX - rect.left - this.offsetX) / this.scale,
-            y: (clientY - rect.top - this.offsetY) / this.scale
+            x: (clientX - this.offsetX) / this.scale,
+            y: (clientY - this.offsetY) / this.scale
         };
     }
 
     handleMouseDown(e) {
         if (e.button !== 0) return;
+
+        // 检查是否点击在工具栏按钮上，如果是则不触发绘画
+        if (e.target.closest('.toolbar-group') || e.target.closest('.tool-popup') ||
+            e.target.closest('.floating-controls') || e.target.closest('.dynamic-island')) {
+            return;
+        }
+
         this.isDrawing = true;
         const point = this.getPoint(e);
 
